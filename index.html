@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bậc Thầy Tư Duy: Truy Tìm Sự Thật</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Màn hình Chào mừng -->
+        <div id="start-screen" class="screen active">
+            <h1 class="game-title">Bậc Thầy<br><span class="highlight">Tư Duy</span></h1>
+            <p class="subtitle">Truy Tìm Sự Thật 🕵️‍♂️💡</p>
+            <div class="game-rules">
+                <h3>Luật Chơi</h3>
+                <ul>
+                    <li>3 Vòng thi đấu: Khởi Động - Tăng Tốc - Về Đích</li>
+                    <li>Trả lời đúng để ghi điểm tối đa</li>
+                    <li>Sẵn sàng hack não chưa?</li>
+                </ul>
+            </div>
+            <button id="start-btn" class="btn primary-btn">Bắt Đầu Ngay</button>
+        </div>
+
+        <!-- Màn hình Chơi Game -->
+        <div id="game-screen" class="screen hidden">
+            <div class="header">
+                <div class="timer-badge">⏳ <span id="time-left">15</span>s</div>
+                <div class="score-badge">Điểm: <span id="score">0</span></div>
+            </div>
+
+            <div class="progress-bar">
+                <div id="progress" class="progress-fill"></div>
+            </div>
+
+            <div class="question-container">
+                <h2 id="round-name" class="round-title">Vòng 1: Khởi Động</h2>
+                <div class="question-box">
+                    <p id="question-text">Đang tải câu hỏi...</p>
+                </div>
+
+                <div id="answer-buttons" class="answer-grid">
+                    <!-- Buttons sẽ được tạo bằng JS -->
+                </div>
+            </div>
+
+            <p id="feedback-msg" class="feedback hidden"></p>
+        </div>
+
+        <!-- Màn hình Kết Thúc -->
+        <div id="end-screen" class="screen hidden">
+            <h2 class="result-title">Hoàn Thành! 🎉</h2>
+            <div class="score-card">
+                <p>Tổng điểm của bạn</p>
+                <h1 id="final-score" class="big-score">0</h1>
+                <p id="rank-text" class="rank-text">Đang xếp hạng...</p>
+            </div>
+            <div class="action-buttons">
+                <button id="restart-btn" class="btn secondary-btn">Chơi Lại</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hiệu ứng âm thanh (Optional placeholder) -->
+    <!-- <audio id="correct-sound" src="correct.mp3"></audio> -->
+    <!-- <audio id="wrong-sound" src="wrong.mp3"></audio> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
