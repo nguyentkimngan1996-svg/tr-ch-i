@@ -1,76 +1,394 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bậc Thầy Tư Duy: Truy Tìm Sự Thật</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>DISC Master - L&D Training Game</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-
 <body>
-    <div class="container">
-        <!-- Màn hình Chào mừng -->
-        <div id="start-screen" class="screen active">
-            <h1 class="game-title">Bậc Thầy<br><span class="highlight">Tư Duy</span></h1>
-            <p class="subtitle">Truy Tìm Sự Thật 🕵️‍♂️💡</p>
-            <div class="game-rules">
-                <h3>Luật Chơi</h3>
-                <ul>
-                    <li>3 Vòng thi đấu: Khởi Động - Tăng Tốc - Về Đích</li>
-                    <li>Trả lời đúng để ghi điểm tối đa</li>
-                    <li>Sẵn sàng hack não chưa?</li>
-                </ul>
-            </div>
-            <button id="start-btn" class="btn primary-btn">Bắt Đầu Ngay</button>
-        </div>
+    <div id="root"></div>
 
-        <!-- Màn hình Chơi Game -->
-        <div id="game-screen" class="screen hidden">
-            <div class="header">
-                <div class="timer-badge">⏳ <span id="time-left">15</span>s</div>
-                <div class="score-badge">Điểm: <span id="score">0</span></div>
-            </div>
+    <!-- Application Logic -->
+    <script type="text/babel">
+const { useState, useEffect } = React;
 
-            <div class="progress-bar">
-                <div id="progress" class="progress-fill"></div>
-            </div>
+// --- Data ---
+const scenarios = [
+  {
+    id: 1,
+    customerType: 'D',
+    customerName: 'KhÃ¡ch hÃ ng A',
+    message: "TÃ´i Ä‘Ã£ gá»­i email pháº£n Ã¡nh vá» lá»—i há»‡ thá»‘ng 2 tiáº¿ng trÆ°á»›c nhÆ°ng chÆ°a ai xá»­ lÃ½! YÃªu cáº§u giáº£i quyáº¿t cho tÃ´i ngay láº­p tá»©c, tá»‘n quÃ¡ nhiá»u thá»i gian cá»§a tÃ´i rá»“i. Bao giá» xong?",
+    step1Question: 'Tá»« Ä‘oáº¡n chat trÃªn, khÃ¡ch hÃ ng nÃ y thuá»™c nhÃ³m tÃ­nh cÃ¡ch nÃ o trong DISC?',
+    step1Options: [
+      { type: 'D', label: 'D (Dominance - Quyáº¿t Ä‘oÃ¡n)' },
+      { type: 'I', label: 'I (Influence - Nhiá»‡t tÃ¬nh)' },
+      { type: 'S', label: 'S (Steadiness - KiÃªn Ä‘á»‹nh)' },
+      { type: 'C', label: 'C (Compliance - Chi tiáº¿t)' }
+    ],
+    step2Question: 'Báº¡n nÃªn pháº£n há»“i nhÆ° tháº¿ nÃ o Ä‘á»ƒ phÃ¹ há»£p vá»›i khÃ¡ch hÃ ng nhÃ³m D?',
+    step2Options: [
+      { id: 'a', text: 'Dáº¡ em xin xÆ°ng lá»—i anh chá»‹ ráº¥t nhiá»u vÃ¬ sá»± cá»‘ nÃ y, thá»±c sá»± lÃ  há»‡ thá»‘ng bÃªn em Ä‘ang quÃ¡ táº£i nÃªn cÃ¡c báº¡n ká»¹ thuáº­t chÆ°a ká»‹p xá»­ lÃ½, mong anh chá»‹ thÃ´ng cáº£m thÃªm má»™t chÃºt xÃ­u ná»¯a áº¡.' },
+      { id: 'b', text: 'ChÃ o anh/chá»‹. TÃ´i Ä‘Ã£ nháº­n Ä‘Æ°á»£c yÃªu cáº§u. Lá»—i nÃ y sáº½ Ä‘Æ°á»£c xá»­ lÃ½ xong trong vÃ²ng 30 phÃºt ná»¯a. TÃ´i sáº½ gá»i láº¡i xÃ¡c nháº­n ngay khi hoÃ n táº¥t. QuÃ½ khÃ¡ch vui lÃ²ng chá».' },
+      { id: 'c', text: 'ChÃ o anh/chá»‹. Theo khoáº£n 3 Ä‘iá»u 2 cá»§a há»£p Ä‘á»“ng dá»‹ch vá»¥, thá»i gian pháº£n há»“i tiÃªu chuáº©n lÃ  4-8 tiáº¿ng phá»¥ thuá»™c vÃ o má»©c Ä‘á»™ nghiÃªm trá»ng. Tuy nhiÃªn tÃ´i sáº½ gá»­i lÃªn ká»¹ thuáº­t xem xÃ©t.' }
+    ],
+    correctAnswer: 'b',
+    explanation: 'KhÃ¡ch hÃ ng nhÃ³m D thÃ­ch sá»± Ä‘i tháº³ng vÃ o váº¥n Ä‘á», nhanh chÃ³ng vÃ  cÃ³ káº¿t quáº£/thá»i háº¡n rÃµ rÃ ng. Pháº£n há»“i [B] cung cáº¥p giáº£i phÃ¡p, má»‘c thá»i gian cá»¥ thá»ƒ vÃ  chá»§ Ä‘á»™ng giáº£i quyáº¿t váº¥n Ä‘á», ráº¥t phÃ¹ há»£p vá»›i nhÃ³m D. Pháº£n há»“i [A] quÃ¡ cáº£m xÃºc/lan man, pháº£n há»“i [C] láº¡i cá»©ng nháº¯c theo quy trÃ¬nh.'
+  },
+  {
+    id: 2,
+    customerType: 'I',
+    customerName: 'KhÃ¡ch hÃ ng B',
+    message: "ChÃ o em, Ã´i hÃ´m nay chá»‹ mua hÃ ng bÃªn em vui quÃ¡, cÃ¡i Ã¡o Ä‘áº¹p láº¯m cÆ¡. NhÆ°ng mÃ  chá»‹ lá»¡ chá»n nháº§m mÃ u há»“ng rá»“i, chá»‹ tÃ­nh láº¥y mÃ u xanh Ä‘á»ƒ máº·c Ä‘i sinh nháº­t báº¡n tuáº§n nÃ y cÆ¡. Cá»©u chá»‹ vá»›i, Ä‘á»•i cho chá»‹ nhÃ©, nhanh lÃªn khÃ´ng chá»‹ lá»¡ tiá»‡c máº¥t hihi!",
+    step1Question: 'TÃ­nh cÃ¡ch cá»§a khÃ¡ch hÃ ng nÃ y rÃµ rÃ ng nháº¥t lÃ  nhÃ³m nÃ o?',
+    step1Options: [
+      { type: 'D', label: 'D (Dominance)' },
+      { type: 'I', label: 'I (Influence)' },
+      { type: 'S', label: 'S (Steadiness)' },
+      { type: 'C', label: 'C (Compliance)' }
+    ],
+    step2Question: 'CÃ¡ch á»©ng xá»­ khÃ©o lÃ©o nháº¥t vá»›i khÃ¡ch hÃ ng nhÃ³m I lÃ  gÃ¬?',
+    step2Options: [
+      { id: 'a', text: 'Dáº¡, quy trÃ¬nh Ä‘á»•i hÃ ng bÃªn em lÃ  khÃ¡ch hÃ ng cáº§n tá»± gÃ³i sáº£n pháº©m, gá»­i bÆ°u Ä‘iá»‡n vá» kho á»Ÿ Ä‘á»‹a chá»‰ XYZ. Chá»‹ nhá»› ghi mÃ£ Ä‘Æ¡n hÃ ng lÃªn há»™p nhÃ©.' },
+      { id: 'b', text: 'ChÃ o chá»‹. Chá»‹ muá»‘n Ä‘á»•i sang mÃ u xanh áº¡? Vui lÃ²ng cung cáº¥p mÃ£ Ä‘Æ¡n hÃ ng Ä‘á»ƒ tÃ´i kiá»ƒm tra tá»“n kho.' },
+      { id: 'c', text: 'Dáº¡ chÃ o chá»‹! Cáº£m Æ¡n chá»‹ Ä‘Ã£ thÃ­ch sáº£n pháº©m áº¡. Chá»‹ yÃªn tÃ¢m, em sáº½ há»— trá»£ Ä‘á»•i sang mÃ u xanh liá»n cho chá»‹ Ä‘á»ƒ ká»‹p diá»‡n Ä‘i sinh nháº­t nhÃ©. Chá»‹ cho em xin láº¡i mÃ£ Ä‘Æ¡n hÃ ng nha!' }
+    ],
+    correctAnswer: 'c',
+    explanation: 'NhÃ³m I lÃ  ngÆ°á»i hÆ°á»›ng ngoáº¡i, nhiá»‡t tÃ¬nh, thÃ­ch giao tiáº¿p vÃ  cáº£m xÃºc. Há» thÃ­ch Ä‘Æ°á»£c khen ngá»£i vÃ  táº¡o khÃ´ng khÃ­ vui váº». Pháº£n há»“i [C] thá»ƒ hiá»‡n sá»± Ä‘á»“ng Ä‘iá»‡u vá» cáº£m xÃºc, thÃ¢n thiá»‡n vÃ  Ä‘Ã¡p á»©ng Ä‘Ãºng mong muá»‘n cá»§a khÃ¡ch.'
+  },
+  {
+    id: 3,
+    customerType: 'S',
+    customerName: 'KhÃ¡ch hÃ ng C',
+    message: "Dáº¡ cho mÃ¬nh há»i, cÃ´ng ty vá»«a gá»­i thÃ´ng bÃ¡o thay Ä‘á»•i gÃ³i cÆ°á»›c. MÃ¬nh dÃ¹ng gÃ³i cÅ© lÃ¢u nay quen rá»“i, giá» Ä‘á»•i sang gÃ³i má»›i mÃ¬nh hÆ¡i lo khÃ´ng biáº¿t thao tÃ¡c cÃ³ khÃ³ khÃ´ng, sá»£ nháº§m láº«n máº¥t dá»¯ liá»‡u ná»¯a. Báº¡n tÆ° váº¥n giÃºp mÃ¬nh vá»›i Ä‘Æ°á»£c khÃ´ng?",
+    step1Question: 'Sá»± e ngáº¡i thay Ä‘á»•i vÃ  tÃ¬m kiáº¿m sá»± an toÃ n lÃ  Ä‘áº·c trÆ°ng cá»§a nhÃ³m nÃ o?',
+    step1Options: [
+      { type: 'D', label: 'D (Dominance)' },
+      { type: 'I', label: 'I (Influence)' },
+      { type: 'S', label: 'S (Steadiness)' },
+      { type: 'C', label: 'C (Compliance)' }
+    ],
+    step2Question: 'Äá»ƒ tráº¥n an khÃ¡ch hÃ ng nhÃ³m S, báº¡n nÃªn pháº£n há»“i ra sao?',
+    step2Options: [
+      { id: 'a', text: 'Anh/chá»‹ yÃªn tÃ¢m, gÃ³i má»›i tá»‘t hÆ¡n gÃ³i cÅ© nhiá»u, bÃªn em Ä‘Ã£ tá»‘i Æ°u háº¿t rá»“i, cá»© báº¥m nÃ¢ng cáº¥p lÃ  há»‡ thá»‘ng tá»± Ä‘á»™ng lÃ m háº¿t áº¡.' },
+      { id: 'b', text: 'Em chÃ o anh/chá»‹. Em hiá»ƒu sá»± lo láº¯ng cá»§a mÃ¬nh áº¡. Anh/chá»‹ yÃªn tÃ¢m nhÃ©, viá»‡c chuyá»ƒn Ä‘á»•i ráº¥t dá»… dÃ ng vÃ  em sáº½ Ä‘á»“ng hÃ nh hÆ°á»›ng dáº«n mÃ¬nh tá»«ng bÆ°á»›c má»™t. Dá»¯ liá»‡u cá»§a mÃ¬nh Ä‘Æ°á»£c báº£o Ä‘áº£m an toÃ n tuyá»‡t Ä‘á»‘i 100% áº¡.' },
+      { id: 'c', text: 'ChÃ o anh/chá»‹. Cáº¥u trÃºc gÃ³i má»›i bao gá»“m 3 tÃ­nh nÄƒng má»›i. Viá»‡c nÃ¢ng cáº¥p chá»‰ cáº§n 3 click chuá»™t á»Ÿ má»¥c Setting -> Upgrade. QuÃ¡ trÃ¬nh khÃ´ng áº£nh hÆ°á»Ÿng tá»›i Database.' }
+    ],
+    correctAnswer: 'b',
+    explanation: 'NhÃ³m S ráº¥t quan trá»ng sá»± an toÃ n, táº­n tÃ¢m vÃ  chÃ¢n thÃ nh. Khi thay Ä‘á»•i, há» cáº§n ngÆ°á»i khÃ¡c há»— trá»£ vÃ  Ä‘áº£m báº£o rá»§i ro tháº¥p nháº¥t. Pháº£n há»“i [B] vá»«a thá»ƒ hiá»‡n sá»± Ä‘á»“ng cáº£m, vá»«a cam káº¿t Ä‘á»“ng hÃ nh há»— trá»£, mang láº¡i cáº£m giÃ¡c an tÃ¢m.'
+  },
+  {
+    id: 4,
+    customerType: 'C',
+    customerName: 'KhÃ¡ch hÃ ng D',
+    message: "ChÃ o báº¡n. TÃ´i Ä‘ang xem xÃ©t gÃ³i sáº£n pháº©m Pro. HÃ£y cho tÃ´i biáº¿t chi tiáº¿t vá»: 1) Tá»· lá»‡ uptime cam káº¿t (SLA), 2) PhÆ°Æ¡ng thá»©c báº£o máº­t mÃ£ hÃ³a dá»¯ liá»‡u, 3) Báº£ng giÃ¡ chi tiáº¿t phÃ­ phÃ¡t sinh náº¿u vÆ°á»£t quÃ¡ dung lÆ°á»£ng cho phÃ©p. TÃ´i cáº§n vÄƒn báº£n rÃµ rÃ ng.",
+    step1Question: 'Sá»± chi tiáº¿t, nguyÃªn táº¯c vÃ  yÃªu cáº§u dá»¯ liá»‡u chÃ­nh xÃ¡c lÃ  biá»ƒu hiá»‡n cá»§a:',
+    step1Options: [
+      { type: 'D', label: 'D (Dominance)' },
+      { type: 'I', label: 'I (Influence)' },
+      { type: 'S', label: 'S (Steadiness)' },
+      { type: 'C', label: 'C (Compliance)' }
+    ],
+    step2Question: 'CÃ¡ch tá»‘t nháº¥t Ä‘á»ƒ phá»¥c vá»¥ khÃ¡ch hÃ ng nhÃ³m C (Logic, Chi tiáº¿t):',
+    step2Options: [
+      { id: 'a', text: 'ChÃ o anh/chá»‹. ÄÃ¢y lÃ  bÃ¡o cÃ¡o chi tiáº¿t: 1) Uptime SLA cam káº¿t 99.9% kÃ¨m chÃ­nh sÃ¡ch bá»“i thÆ°á»ng theo phá»¥ lá»¥c Ä‘iá»u khoáº£n. 2) Dá»¯ liá»‡u mÃ£ hÃ³a AES-256. 3) Báº£ng giÃ¡ chi phÃ­ phÃ¡t sinh em xin Ä‘Ã­nh kÃ¨m á»Ÿ file PDF phÃ­a dÆ°á»›i. Anh/chá»‹ vui lÃ²ng kiá»ƒm tra áº¡.' },
+      { id: 'b', text: 'Dáº¡ chÃ o anh, bÃªn em báº£o máº­t cá»±c ká»³ an toÃ n nÃªn anh cá»© yÃªn tÃ¢m tuyá»‡t Ä‘á»‘i nha. Náº¿u vÆ°á»£t dung lÆ°á»£ng bÃªn em sáº½ bÃ¡o trÆ°á»›c cho anh, phÃ­ cÅ©ng ráº¥t ráº» khÃ´ng Ä‘Ã¡ng bao nhiÃªu Ä‘Ã¢u áº¡.' },
+      { id: 'c', text: 'GÃ³i Pro bÃªn em lÃ  gÃ³i Ä‘Æ°á»£c dÃ¹ng nhiá»u nháº¥t. Uptime tá»‘t láº¯m, Ã­t lá»—i. Náº¿u anh quan tÃ¢m em sáº½ gá»i Ä‘iá»‡n trá»±c tiáº¿p trao Ä‘á»•i 15 phÃºt cho nhanh anh nhÃ©.' }
+    ],
+    correctAnswer: 'a',
+    explanation: 'NhÃ³m C bá»‹ thuyáº¿t phá»¥c bá»Ÿi sá»‘ liá»‡u logic, báº±ng chá»©ng cá»¥ thá»ƒ vÃ  chuyÃªn nghiá»‡p. Há» khÃ´ng thÃ­ch nÃ³i chung chung hay há»©a háº¹n suÃ´ng. Pháº£n há»“i [A] Ä‘Ã¡p á»©ng Ä‘áº§y Ä‘á»§, rÃ nh máº¡ch vÃ  cÃ³ vÄƒn báº£n (file PDF) chá»©ng minh, ráº¥t chuyÃªn nghiá»‡p.'
+  }
+];
 
-            <div class="question-container">
-                <h2 id="round-name" class="round-title">Vòng 1: Khởi Động</h2>
-                <div class="question-box">
-                    <p id="question-text">Đang tải câu hỏi...</p>
-                </div>
+// --- Components ---
 
-                <div id="answer-buttons" class="answer-grid">
-                    <!-- Buttons sẽ được tạo bằng JS -->
-                </div>
-            </div>
+function App() {
+  const [gameState, setGameState] = useState('welcome'); // 'welcome', 'playing', 'result'
+  const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
+  const [score, setScore] = useState(0);
 
-            <p id="feedback-msg" class="feedback hidden"></p>
-        </div>
+  const startGame = () => {
+    setGameState('playing');
+    setCurrentScenarioIndex(0);
+    setScore(0);
+  };
 
-        <!-- Màn hình Kết Thúc -->
-        <div id="end-screen" class="screen hidden">
-            <h2 class="result-title">Hoàn Thành! 🎉</h2>
-            <div class="score-card">
-                <p>Tổng điểm của bạn</p>
-                <h1 id="final-score" class="big-score">0</h1>
-                <p id="rank-text" class="rank-text">Đang xếp hạng...</p>
-            </div>
-            <div class="action-buttons">
-                <button id="restart-btn" class="btn secondary-btn">Chơi Lại</button>
-            </div>
-        </div>
+  const handleFinish = (finalScore) => {
+    setScore(finalScore);
+    setGameState('result');
+  };
+
+  return (
+    <>
+      <div className="bg-orbs">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+        <div className="orb orb-3"></div>
+      </div>
+      <div className="app-container slide-up">
+        {gameState === 'welcome' && <WelcomeScreen onStart={startGame} />}
+        {gameState === 'playing' && (
+          <GameScreen 
+            scenarioIndex={currentScenarioIndex} 
+            totalScenarios={scenarios.length}
+            score={score}
+            setScore={setScore}
+            onNext={(nextIndex) => {
+              if (nextIndex >= scenarios.length) {
+                handleFinish(score + 1); // +1 assuming they got it right, score tracking handled inside
+              } else {
+                setCurrentScenarioIndex(nextIndex);
+              }
+            }}
+            onFinish={handleFinish}
+          />
+        )}
+        {gameState === 'result' && (
+          <ResultScreen score={score} total={scenarios.length} onRestart={startGame} />
+        )}
+      </div>
+    </>
+  );
+}
+
+function WelcomeScreen({ onStart }) {
+  return (
+    <div className="screen welcome-screen fade-in">
+      <i className="fa-solid fa-users-viewfinder welcome-icon"></i>
+      <h1>DISC Master<br/>Giáº£i mÃ£ khÃ¡ch hÃ ng</h1>
+      <p>Trá»Ÿ thÃ nh chuyÃªn gia Ä‘á»c vá»‹ khÃ¡ch hÃ ng! TrÃ² chÆ¡i giÃºp báº¡n thá»±c hÃ nh nháº­n diá»‡n vÃ  tÆ°Æ¡ng tÃ¡c vá»›i khÃ¡ch hÃ ng theo 4 nhÃ³m tÃ­nh cÃ¡ch ná»n táº£ng.</p>
+      
+      <div className="disc-badges">
+        <div className="badge d"><i className="fa-solid fa-bolt"></i> D - Quyáº¿t Ä‘oÃ¡n</div>
+        <div className="badge i"><i className="fa-solid fa-face-smile"></i> I - Nhiá»‡t tÃ¬nh</div>
+        <div className="badge s"><i className="fa-solid fa-hand-holding-heart"></i> S - KiÃªn Ä‘á»‹nh</div>
+        <div className="badge c"><i className="fa-solid fa-magnifying-glass"></i> C - Chi tiáº¿t</div>
+      </div>
+      
+      <button className="btn mt-4" onClick={onStart}>
+        Báº¯t Ä‘áº§u thu tháº­p kinh nghiá»‡m <i className="fa-solid fa-arrow-right"></i>
+      </button>
     </div>
+  );
+}
 
-    <!-- Hiệu ứng âm thanh (Optional placeholder) -->
-    <!-- <audio id="correct-sound" src="correct.mp3"></audio> -->
-    <!-- <audio id="wrong-sound" src="wrong.mp3"></audio> -->
+function GameScreen({ scenarioIndex, totalScenarios, score, setScore, onNext, onFinish }) {
+  const [step, setStep] = useState(1); // 1: Guess DISC label, 2: Choose Response
+  const [selectedDisc, setSelectedDisc] = useState(null);
+  const [selectedResponse, setSelectedResponse] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  
+  const scenario = scenarios[scenarioIndex];
+  const progress = ((scenarioIndex) / totalScenarios) * 100;
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="script.js"></script>
+  // Reset state when scenario changes
+  useEffect(() => {
+    setStep(1);
+    setSelectedDisc(null);
+    setSelectedResponse(null);
+    setShowFeedback(false);
+  }, [scenarioIndex]);
+
+  const handleDiscSelect = (type) => {
+    setSelectedDisc(type);
+  };
+
+  const handleDiscSubmit = () => {
+    if (!selectedDisc) return;
+    if (selectedDisc === scenario.customerType) {
+      setStep(2);
+    } else {
+      setIsCorrect(false);
+      setShowFeedback(true);
+    }
+  };
+
+  const handleResponseSelect = (id) => {
+    setSelectedResponse(id);
+  };
+
+  const handleResponseSubmit = () => {
+    if (!selectedResponse) return;
+    
+    const correct = selectedResponse === scenario.correctAnswer;
+    setIsCorrect(correct);
+    setShowFeedback(true);
+    if (correct) {
+      setScore(s => s + 1);
+    }
+  };
+
+  const closeFeedback = () => {
+    setShowFeedback(false);
+    if (isCorrect) {
+      // Move to next scenario
+      if (scenarioIndex + 1 === totalScenarios) {
+        onFinish(score + (isCorrect ? 1 : 0));
+      } else {
+        onNext(scenarioIndex + 1);
+      }
+    } else {
+       if (step === 1) {
+           setSelectedDisc(null); // Let them try again
+       } else {
+           setSelectedResponse(null);
+       }
+    }
+  };
+
+  return (
+    <div className="screen fade-in" key={scenario.id}>
+      {/* Header */}
+      <div className="game-header">
+        <div style={{ fontWeight: 600 }}>TÃ¬nh huá»‘ng {scenarioIndex + 1}/{totalScenarios}</div>
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+        </div>
+        <div className="score-badge"><i className="fa-solid fa-star"></i> {score}</div>
+      </div>
+
+      {/* Chat History */}
+      <div className="chat-container">
+        <div className="message">
+          <div className="avatar customer"><i className="fa-solid fa-user"></i></div>
+          <div className="message-bubble" dangerouslySetInnerHTML={{__html: scenario.message}}></div>
+        </div>
+        {step === 2 && (
+          <div className="message agent slide-in-right delay-200">
+            <div className="avatar agent"><i className="fa-solid fa-headset"></i></div>
+            <div className="message-bubble" style={{opacity: 0.8, fontStyle: 'italic'}}>
+              ...Báº¡n Ä‘ang gÃµ pháº£n há»“i...
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Interactive Area */}
+      {step === 1 ? (
+        <div className="quiz-section slide-up">
+          <h3 className="question-title">{scenario.step1Question}</h3>
+          <div className="options-grid">
+            {scenario.step1Options.map(opt => (
+              <div 
+                key={opt.type} 
+                className={`option-btn ${selectedDisc === opt.type ? 'selected' : ''}`}
+                onClick={() => handleDiscSelect(opt.type)}
+              >
+                <div className="option-char">{opt.type}</div>
+                <div>{opt.label}</div>
+              </div>
+            ))}
+          </div>
+          <button 
+            className="btn" 
+            onClick={handleDiscSubmit}
+            disabled={!selectedDisc}
+            style={{ opacity: selectedDisc ? 1 : 0.5, cursor: selectedDisc ? 'pointer' : 'not-allowed', alignSelf: 'center', marginTop: '10px' }}
+          >
+            XÃ¡c nháº­n
+          </button>
+        </div>
+      ) : (
+        <div className="quiz-section slide-up">
+           <div className="badge mb-3" style={{alignSelf: 'center', background: `var(--disc-${scenario.customerType.toLowerCase()})`}}>
+              KhÃ¡ch hÃ ng thuá»™c nhÃ³m {scenario.customerType}
+           </div>
+          <h3 className="question-title">{scenario.step2Question}</h3>
+          <div className="options-list">
+            {scenario.step2Options.map((opt, idx) => (
+              <div 
+                key={opt.id} 
+                className={`option-btn ${selectedResponse === opt.id ? 'selected' : ''}`}
+                onClick={() => handleResponseSelect(opt.id)}
+              >
+                <div className="option-char">{String.fromCharCode(65 + idx)}</div>
+                <div>{opt.text}</div>
+              </div>
+            ))}
+          </div>
+          <button 
+            className="btn mt-3" 
+            onClick={handleResponseSubmit}
+            disabled={!selectedResponse}
+            style={{ opacity: selectedResponse ? 1 : 0.5, cursor: selectedResponse ? 'pointer' : 'not-allowed', alignSelf: 'center', marginTop: '20px' }}
+          >
+            Gá»­i pháº£n há»“i
+          </button>
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedback && (
+        <div className="modal-overlay">
+          <div className={`modal-content slide-up ${isCorrect ? 'success' : 'error'}`}>
+            <div className="modal-icon">
+              <i className={`fa-solid ${isCorrect ? 'fa-circle-check' : 'fa-circle-xmark'}`}></i>
+            </div>
+            <h2>{isCorrect ? 'ChÃ­nh xÃ¡c!' : 'ChÆ°a chÃ­nh xÃ¡c!'}</h2>
+            
+            {/* Show explanation only on step 2, or give hint on step 1 */}
+            <div className="feedback-text">
+              {step === 1 && !isCorrect && "HÃ£y Ä‘á»c ká»¹ tÃ´ng giá»ng vÃ  yÃªu cáº§u cá»§a ngÆ°á»i nÃ y. Há» Ä‘ang nÃ³ng vá»™i hay ká»ƒ lá»ƒ? ChÃº trá»ng chi tiáº¿t hay sá»£ sá»± thay Ä‘á»•i?"}
+              {step === 2 && isCorrect && scenario.explanation}
+              {step === 2 && !isCorrect && "Pháº£n há»“i nÃ y chÆ°a phÃ¹ há»£p. " + scenario.explanation}
+            </div>
+
+            <button className="btn" onClick={closeFeedback}>
+              {isCorrect ? 'Tiáº¿p tá»¥c' : 'Thá»­ láº¡i'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultScreen({ score, total, onRestart }) {
+  const percentage = (score / total) * 100;
+  
+  let msg = "";
+  if (percentage === 100) msg = "Tuyá»‡t vá»i! Báº¡n lÃ  má»™t báº­c tháº§y Ä‘á»c vá»‹ khÃ¡ch hÃ ng.";
+  else if (percentage >= 75) msg = "Ráº¥t tá»‘t! Báº¡n náº¯m báº¯t tÃ¢m lÃ½ khÃ¡ch hÃ ng khÃ¡ chuáº©n xÃ¡c.";
+  else msg = "Báº¡n Ä‘Ã£ cÃ³ tráº£i nghiá»‡m quÃ½ giÃ¡, hÃ£y thá»±c hÃ nh thÃªm Ä‘á»ƒ pháº£n xáº¡ tá»‘t hÆ¡n nhÃ©!";
+
+  return (
+    <div className="screen result-screen fade-in">
+      <h2>Tá»•ng káº¿t BÃ i thá»±c hÃ nh</h2>
+      
+      <div className="score-circle" style={{'--percentage': `${percentage}%`}}>
+        <div className="score-text">
+          {score}/{total}
+        </div>
+      </div>
+      
+      <p className="result-msg">{msg}</p>
+
+      <button className="btn" onClick={onRestart}>
+        <i className="fa-solid fa-rotate-right"></i> Luyá»‡n táº­p láº¡i
+      </button>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
 </body>
-
 </html>
+
